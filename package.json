@@ -29,6 +29,7 @@
     "test": "test"
   },
   "scripts": {
+    "pretest": "npm run build",
     "test": "tap lib/test/*.js",
     "start": "babel --watch --optional spec.protoToAssign --modules umdStrict --source-maps inline --out-dir ./lib ./src",
     "build": "babel --optional spec.protoToAssign --modules umdStrict --source-maps inline --out-dir ./lib ./src",
