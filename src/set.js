@@ -117,11 +117,23 @@ class TypeInferredSet extends BaseImmutableSet {
   }
 
   has(key) {
-    return this[$store].has(key)
+    const result = this[$type][$read](key)
+
+    if (result instanceof TypeError) {
+      throw new TypeError(`Invalid key: ${result.message}`)
+    }
+
+    return this[$store].has(result)
   }
 
   get(key, notSetValue) {
-    return this[$store] ? this[$store].get(key, notSetValue) : notSetValue
+    const result = this[$type][$read](key)
+
+    if (result instanceof TypeError) {
+      throw new TypeError(`Invalid key: ${result.message}`)
+    }
+
+    return this[$store] ? this[$store].get(result, notSetValue) : notSetValue
   }
 
   clear() {
@@ -140,6 +152,36 @@ class TypeInferredSet extends BaseImmutableSet {
     }
 
     return change(this, store => store ? store.add(result) : ImmutableSet([result]))
+  }
+
+  union(...iters) {
+    iters = iters.filter(x => x.size !== 0)
+    if (iters.length === 0) {
+      return this;
+    }
+    //Convert each iterable into a typed set
+    const [first, ...sets] = iters.map(iter => this[$read](iter))
+    return change(this, store => store ? store.union(first, ...sets) : ImmutableSet(first).union(...sets))
+  }
+
+  intersect(...iters) {
+    iters = iters.filter(x => x.size !== 0)
+    if (iters.length === 0) {
+      return this;
+    }
+    //Convert each iterable into a typed set
+    const [first, ...sets] = iters.map(iter => this[$read](iter))
+    return change(this, store => store ? store.intersect(first, ...sets) : ImmutableSet(first).intersect(...sets))
+  }
+
+  subtract(...iters) {
+    iters = iters.filter(x => x.size !== 0)
+    if (iters.length === 0) {
+      return this;
+    }
+    //Convert each iterable into a typed set
+    const [first, ...sets] = iters.map(iter => this[$read](iter))
+    return change(this, store => store ? store.subtract(first, ...sets) : ImmutableSet(first).subtract(...sets))
   }
 
   remove(value) {
